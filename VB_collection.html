@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作效率痛點調查 - 即時統計</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .survey-form {
+            display: block;
+        }
+
+        .question-block {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .question-block:last-child {
+            border-bottom: none;
+        }
+
+        .question-title {
+            font-size: 1.3em;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-label:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .option-label input[type="checkbox"],
+        .option-label input[type="radio"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-top: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-section {
+            display: none;
+        }
+
+        .stats-section.active {
+            display: block;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-title {
+            font-size: 1.5em;
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .bar-chart {
+            margin: 15px 0;
+        }
+
+        .bar-item {
+            margin-bottom: 12px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+
+        .bar-bg {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .fun-stats {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .fun-stats h3 {
+            color: #d63031;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .fun-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #e17055;
+            margin: 10px 0;
+            animation: pulse 2s infinite;
+        }
+
+        .toggle-view {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .toggle-btn {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            color: white;
+            background: #764ba2;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: #667eea;
+            transform: scale(1.05);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .emoji {
+            font-size: 1.5em;
+            margin: 0 5px;
+        }
+
+        .response-count {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 工作效率痛點調查</h1>
+            <p>幫助我們了解你的工作挑戰，一起找出改善方向！</p>
+        </div>
+
+        <div class="response-count" id="responseCount">
+            已收集 <strong id="totalResponses">0</strong> 份回應 🎉
+        </div>
+
+        <!-- Survey Form -->
+        <div class="card survey-form" id="surveyForm">
+            <form id="mainForm">
+                <!-- Question 1 -->
+                <div class="question-block">
+                    <div class="question-title">1. 你最想改善的工作類型 (可多選) 📋</div>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q1" value="報告整理">
+                            <span>報告整理</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q1" value="會議追蹤">
+                            <span>會議追蹤</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q1" value="資料查找">
+                            <span>資料查找</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q1" value="跨部門溝通">
+                            <span>跨部門溝通</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q1" value="規格控管">
+                            <span>規格控管</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q1" value="客訴/issue">
+                            <span>客訴/issue</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q1" value="其他">
+                            <span>其他</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="question-block">
+                    <div class="question-title">2. 最浪費時間的是哪一步？(可多選) ⏰</div>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="寫報告">
+                            <span>寫報告</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="重複貼上整理">
+                            <span>重複貼上整理</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="資料整理">
+                            <span>資料整理</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="追人回覆">
+                            <span>追人回覆</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="版本與資料混亂">
+                            <span>版本與資料混亂</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="錯誤重工">
+                            <span>錯誤重工</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="實驗解析">
+                            <span>實驗解析</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="layout">
+                            <span>layout</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q2" value="其他">
+                            <span>其他</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="question-block">
+                    <div class="question-title">3. 目前每次大概花多久？(分鐘) ⏱️</div>
+                    <input type="number" name="q3" class="input-field" placeholder="請輸入分鐘數，例如：90" min="1" required>
+                </div>
+
+                <!-- Question 4 -->
+                <div class="question-block">
+                    <div class="question-title">4. 頻率（每週大約幾次？）📅</div>
+                    <input type="number" name="q4" class="input-field" placeholder="請輸入次數，例如：6" min="1" required>
+                </div>
+
+                <!-- Question 5 -->
+                <div class="question-block">
+                    <div class="question-title">5. 造成低效率的原因 (可多選) 🔍</div>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q5" value="規劃不足">
+                            <span>規劃不足</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q5" value="會議時間太長">
+                            <span>會議時間太長</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q5" value="資料分散">
+                            <span>資料分散</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q5" value="跨部門等待">
+                            <span>跨部門等待</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q5" value="權責不清">
+                            <span>權責不清</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q5" value="機制不明">
+                            <span>機制不明</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q5" value="其他">
+                            <span>其他</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">送出問卷 ✨</button>
+            </form>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="card stats-section" id="statsSection">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">📊 即時統計結果</h2>
+            
+            <div class="stat-card">
+                <div class="stat-title">最想改善的工作類型</div>
+                <div id="q1Stats" class="bar-chart"></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">最浪費時間的步驟</div>
+                <div id="q2Stats" class="bar-chart"></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">低效率原因</div>
+                <div id="q5Stats" class="bar-chart"></div>
+            </div>
+
+            <div class="fun-stats">
+                <h3>💡 有趣統計</h3>
+                <p>平均每次花費時間</p>
+                <div class="fun-number" id="avgTime">-- 分鐘</div>
+                <p>平均每週頻率</p>
+                <div class="fun-number" id="avgFreq">-- 次</div>
+                <p style="margin-top: 20px; font-size: 1.2em; color: #d63031;">
+                    <strong>每週總計浪費：<span id="weeklyWaste">--</span> 小時 😱</strong>
+                </p>
+            </div>
+        </div>
+
+        <div class="toggle-view">
+            <button class="toggle-btn" id="toggleBtn" onclick="toggleView()">查看統計結果 📈</button>
+            <button class="toggle-btn" onclick="resetData()" style="background: #e17055; margin-left: 10px;">清除所有資料 🗑️</button>
+        </div>
+    </div>
+
+    <script>
+        // Storage key
+        const STORAGE_KEY = 'work-efficiency-survey';
+
+        // Initialize or get existing data
+        function getData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return {
+                responses: [],
+                stats: {
+                    q1: {},
+                    q2: {},
+                    q5: {},
+                    times: [],
+                    frequencies: []
+                }
+            };
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            updateDisplay();
+        }
+
+        // Handle form submission
+        document.getElementById('mainForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const response = {
+                q1: formData.getAll('q1'),
+                q2: formData.getAll('q2'),
+                q3: parseInt(formData.get('q3')),
+                q4: parseInt(formData.get('q4')),
+                q5: formData.getAll('q5'),
+                timestamp: new Date().toISOString()
+            };
+
+            // Validate
+            if (response.q1.length === 0 || response.q2.length === 0 || response.q5.length === 0) {
+                alert('請至少選擇一個選項！');
+                return;
+            }
+
+            const data = getData();
+            data.responses.push(response);
+
+            // Update stats
+            response.q1.forEach(item => {
+                data.stats.q1[item] = (data.stats.q1[item] || 0) + 1;
+            });
+            response.q2.forEach(item => {
+                data.stats.q2[item] = (data.stats.q2[item] || 0) + 1;
+            });
+            response.q5.forEach(item => {
+                data.stats.q5[item] = (data.stats.q5[item] || 0) + 1;
+            });
+            data.stats.times.push(response.q3);
+            data.stats.frequencies.push(response.q4);
+
+            saveData(data);
+
+            // Show success and switch to stats
+            alert('感謝您的回覆！ 🎉');
+            e.target.reset();
+            toggleView();
+        });
+
+        function createBarChart(containerId, statsObj, totalResponses) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            const sorted = Object.entries(statsObj).sort((a, b) => b[1] - a[1]);
+
+            sorted.forEach(([label, count]) => {
+                const percentage = ((count / totalResponses) * 100).toFixed(1);
+                
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                
+                barItem.innerHTML = `
+                    <div class="bar-label">
+                        <span>${label}</span>
+                        <span>${count} 票 (${percentage}%)</span>
+                    </div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                
+                container.appendChild(barItem);
+            });
+        }
+
+        function updateDisplay() {
+            const data = getData();
+            const totalResponses = data.responses.length;
+
+            document.getElementById('totalResponses').textContent = totalResponses;
+
+            if (totalResponses > 0) {
+                createBarChart('q1Stats', data.stats.q1, totalResponses);
+                createBarChart('q2Stats', data.stats.q2, totalResponses);
+                createBarChart('q5Stats', data.stats.q5, totalResponses);
+
+                const avgTime = (data.stats.times.reduce((a, b) => a + b, 0) / totalResponses).toFixed(0);
+                const avgFreq = (data.stats.frequencies.reduce((a, b) => a + b, 0) / totalResponses).toFixed(1);
+                const weeklyWaste = ((avgTime * avgFreq) / 60).toFixed(1);
+
+                document.getElementById('avgTime').textContent = avgTime + ' 分鐘';
+                document.getElementById('avgFreq').textContent = avgFreq + ' 次';
+                document.getElementById('weeklyWaste').textContent = weeklyWaste;
+            }
+        }
+
+        function toggleView() {
+            const surveyForm = document.getElementById('surveyForm');
+            const statsSection = document.getElementById('statsSection');
+            const toggleBtn = document.getElementById('toggleBtn');
+
+            if (surveyForm.style.display !== 'none') {
+                surveyForm.style.display = 'none';
+                statsSection.classList.add('active');
+                toggleBtn.textContent = '返回問卷 📝';
+            } else {
+                surveyForm.style.display = 'block';
+                statsSection.classList.remove('active');
+                toggleBtn.textContent = '查看統計結果 📈';
+            }
+        }
+
+        function resetData() {
+            const password = prompt('請輸入管理員密碼：');
+            const correctPassword = 'admin2026'; // 可以修改成你想要的密碼
+            
+            if (password === correctPassword) {
+                if (confirm('確定要清除所有資料嗎？此動作無法復原！')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    alert('資料已清除！ 🗑️');
+                    location.reload();
+                }
+            } else if (password !== null) {
+                alert('密碼錯誤！❌');
+            }
+        }
+
+        // Initialize display on load
+        updateDisplay();
+
+        // Auto-refresh stats every 5 seconds when viewing stats
+        setInterval(() => {
+            if (document.getElementById('statsSection').classList.contains('active')) {
+                updateDisplay();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
+```
+
+### 5️⃣ 提交
+- 往下滾動找到 **「Commit changes」**
+- 在 commit message 寫：`新增工作效率調查系統`
+- 點擊綠色的 **「Commit new file」** 按鈕
+
+### 6️⃣ 啟用 GitHub Pages
+- 回到 repository 主頁
+- 點擊 **Settings**（設定）
+- 左側選單找到 **Pages**
+- **Source** 選 `main` branch
+- **Folder** 選 `/ (root)`
+- 點擊 **Save**
+
+### 7️⃣ 取得網址（等 1-2 分鐘）
+你的網站會是：
+```
+https://reinhard168.github.io/TKLM-system/
